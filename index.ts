@@ -1,27 +1,18 @@
 import './style.css';
 
 import treeGroups from './groups';
-// Write TypeScript code!
-
-// console.log(treeGroups);
-
-let searchQuery = 34511901;
-
-document.getElementById('inputok').addEventListener('input', function(e: any) {
-    searchQuery = e.target.value;
-    searchTreeByUninName(treeGroups);
-});
 
 
-let isUnitExist = function(items) {
-  return items.some(i => {
-    if (i.data.physicalUnitId.startsWith(searchQuery)) {
-    return true;
-  } 
-  });
-}
+class treeDataParser {
 
-let isUnitsArray = function(items) {
+  treeData: any[] = [];
+  units: any[] = [];
+
+  constructor() {
+    this.treeData = treeGroups;
+  }
+
+  private isUnitsArray(items) {
   return items.some(i => {
     if (i.data.unitId) {
     return true;
@@ -29,33 +20,27 @@ let isUnitsArray = function(items) {
   });
  };
 
-
-let deep = 0;
-let currentRoot = null;
-let pathToCurrentResulItem = []; // From Parent to
-let resutItems = [];
-let searchTreeByUninName = function(current) {
-    deep = deep + 1; // deep 1 When Parent
+  parseTree(current, params = { deep: 0 }) {
+    params.deep = params.deep + 1; // deep 1 When Parent
     current.forEach(treeItem => {
-      if (deep === 1) {
-        currentRoot = treeItem;
-        pathToCurrentResulItem = [];
+      if (treeItem.children && !this.isUnitsArray(treeItem.children)) {
+        this.parseTree(treeItem.children);
       }
-      pathToCurrentResulItem[deep - 1] = treeItem.data.name;
-      if (treeItem.children && !isUnitsArray(treeItem.children)) {
-        searchTreeByUninName(treeItem.children);
-      }
-      if (treeItem.children && isUnitsArray(treeItem.children) && isUnitExist(treeItem.children)) {
-          console.log('Exist', 'PathTOCurrentFindUnit', pathToCurrentResulItem);
-          // here Each object from Path Expanded = true;
-          resutItems.push(currentRoot);
+      if (treeItem.children && this.isUnitsArray(treeItem.children)) {
+          this.units = [ ...this.units, ...treeItem.children ];
       }
     });
-    deep = deep - 1;
+    params.deep = params.deep - 1;
 }
-searchTreeByUninName(treeGroups);
 
 
-  
+parseAndShowUnits() {
+  this.parseTree(this.treeData);
+  console.log(this.units);
+}
 
 
+}
+
+let parser = new treeDataParser();
+parser.parseAndShowUnits();
